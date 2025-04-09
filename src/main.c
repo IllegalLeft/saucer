@@ -1,117 +1,137 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include "sauce.h"
 
-struct sauce {
-    char id[6];
-    char version[3];
-    char title[36];
-    char author[21];
-    char group[21];
-    char date[9];
-    unsigned long filesize;
-    unsigned char datatype;
-    unsigned char filetype;
-    unsigned short tinfo1;
-    unsigned short tinfo2;
-    unsigned short tinfo3;
-    unsigned short tinfo4;
-    unsigned char comments;
-    unsigned char tflags;
-    char tinfos[23];
-
-} ansi;
 
 int main(int argc, char *argv[])
 {
     FILE *fp;
+    struct saucerecord sauce;
 
-    //char sauce[128];
+    int c;
+    int viewmode = 0;
+    char *vfield;
 
-    // open file
-    if (argc != 2) {
-        printf("Usage: saucer filename\n");
+    while ((c = getopt(argc, argv, "v:h")) != -1) {
+        switch (c) {
+            case 'h':
+                fprintf(stderr, "Usage: saucer [-v field] filename\n");
+                return 0;
+            case 'v':
+                viewmode = 1;
+                vfield = optarg;
+                break;
+            case '?':
+                fprintf(stderr, "Error, I think.\n");
+                return 1;
+            default:
+                exit(1);
+                break;
+        }
+    }
+
+    // do we have a filename to work with?
+    if (argv[optind] == NULL) {
+        fprintf(stderr, "Usage: saucer [-v field] filename\n");
         return 1;
     }
-    if ((fp = fopen(argv[1], "rb")) == NULL) {
-        printf("%s cannot be opened.\n", argv[1]);
+    if ((fp = fopen(argv[optind], "rb")) == NULL) {
+        fprintf(stderr, "Error: file %s cannot be opened.\n", argv[1]);
         return 1;
     }
 
     // move to start of what would be the SAUCE record
     fseek(fp, -128, SEEK_END);
     // get the SAUCE record
-    fscanf(fp, "%5c", ansi.id);
+    fscanf(fp, "%5c", sauce.id);
 
     // is this SAUCE?
-    if (strcmp(ansi.id, "SAUCE") != 0) {
+    if (strcmp(sauce.id, "SAUCE") != 0) {
         // this ain't no SAUCE
-        printf("Not SAUCEd.\n");
+        printf("No SAUCE found.\n");
         fclose(fp);
-        return 2;
+        return 0;
     }
     // read rest of the SAUCE
-    fscanf(fp, "%2c", ansi.version);
-    fscanf(fp, "%35c", ansi.title);
-    fscanf(fp, "%20c", ansi.author);
-    fscanf(fp, "%20c", ansi.group);
-    fscanf(fp, "%8c", ansi.date);
+    fscanf(fp, "%2c", sauce.version);
+    fscanf(fp, "%35c", sauce.title);
+    fscanf(fp, "%20c", sauce.author);
+    fscanf(fp, "%20c", sauce.group);
+    fscanf(fp, "%8c", sauce.date);
 
     unsigned char buff[4];
     // read filesize
     fread(buff, 4, 1, fp);
-    ansi.filesize = (buff[3] << (3*8)) + (buff[2] << (2*8)) + (buff[1]<<8) + buff[0];
+    sauce.filesize = (buff[3] << (3*8)) + (buff[2] << (2*8)) + (buff[1]<<8) + buff[0];
     // read datatype
     fread(buff, 1, 1, fp);
-    ansi.datatype = buff[0];
+    sauce.datatype = buff[0];
     // read filetype
     fread(buff, 1, 1, fp);
-    ansi.filetype = buff[0];
+    sauce.filetype = buff[0];
     // read tinfo1
     fread(buff, 2, 1, fp);
-    ansi.tinfo1 = (buff[1]<<8) + buff[0];
+    sauce.tinfo1 = (buff[1]<<8) + buff[0];
     // read tinfo2
     fread(buff, 2, 1, fp);
-    ansi.tinfo2 = (buff[1]<<8) + buff[0];
+    sauce.tinfo2 = (buff[1]<<8) + buff[0];
     // read tinfo3
     fread(buff, 2, 1, fp);
-    ansi.tinfo3 = (buff[1]<<8) + buff[0];
+    sauce.tinfo3 = (buff[1]<<8) + buff[0];
     // read tinfo4
     fread(buff, 2, 1, fp);
-    ansi.tinfo4 = (buff[1]<<8) + buff[0];
+    sauce.tinfo4 = (buff[1]<<8) + buff[0];
     // read comments
     fread(buff, 1, 1, fp);
-    ansi.comments = buff[0];
+    sauce.comments = buff[0];
     // read tflags
     fread(buff, 1, 1, fp);
-    ansi.tflags = buff[0];
+    sauce.tflags = buff[0];
     // read tinfos
-    fscanf(fp, "%22c", ansi.tinfos);
+    fscanf(fp, "%22c", sauce.tinfos);
 
     fclose(fp);
 
-
-    // is this ANSi?
-    if (ansi.datatype != 1) {
-        printf("Not Character datatype.\n");
-        return 2;
+    if (viewmode == 0) {
+        // print some basic SAUCE info
+        printf("Title: %s\n", sauce.title);
+        printf("Author: %s\n", sauce.author);
+        printf("Group: %s\n", sauce.group);
     }
-    if (ansi.filetype != 1) {
-        printf("Not ANSi.\n");
-        return 2;
-    }
-    // is this DOS font?
-    if (strstr(ansi.tinfos, "IBM") == NULL) {
-        printf("Not an IBM font.\n");
-        return 2;
-    }
-    // is this 8/9px?
-    if (((ansi.tflags>>1) & 3) == 2) {
-        printf("9\n");
-    }
-    else if (((ansi.tflags>>1) & 3) == 1) {
-        printf("8\n");
+    else {
+        if (strstr("id", vfield) != NULL)
+            printf("%s\n", sauce.id);
+        else if (strstr("version", vfield) != NULL)
+            printf("%s\n", sauce.version);
+        else if (strstr("title", vfield) != NULL)
+            printf("%s\n", sauce.title);
+        else if (strstr("author", vfield) != NULL)
+            printf("%s\n", sauce.author);
+        else if (strstr("group", vfield) != NULL)
+            printf("%s\n", sauce.group);
+        else if (strstr("date", vfield) != NULL)
+            printf("%s\n", sauce.date);
+        else if (strstr("filesize", vfield) != NULL)
+            printf("%ld\n", sauce.filesize);
+        else if (strstr("datatype", vfield) != NULL)
+            printf("%d\n", sauce.datatype);
+        else if (strstr("filetype", vfield) != NULL)
+            printf("%d\n", sauce.filetype);
+        else if (strstr("tinfo1", vfield) != NULL)
+            printf("%hd\n", sauce.tinfo1);
+        else if (strstr("tinfo2", vfield) != NULL)
+            printf("%hd\n", sauce.tinfo2);
+        else if (strstr("tinfo3", vfield) != NULL)
+            printf("%hd\n", sauce.tinfo3);
+        else if (strstr("comments", vfield) != NULL)
+            printf("%d\n", sauce.comments);
+        else if (strstr("tflags", vfield) != NULL)
+            printf("%d\n", sauce.tflags);
+        else if (strstr("tinfos", vfield) != NULL)
+            printf("%s\n", sauce.tinfos);
     }
 
     return 0;
