@@ -17,3 +17,7 @@ struct saucerecord {
     char tinfos[23];
 
 };
+
+int readsauce(FILE *fp, struct saucerecord *sauce);
+
+int printsaucefield(struct saucerecord *sauce, char *field);
