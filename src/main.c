@@ -12,10 +12,14 @@ int main(int argc, char *argv[]) {
 
     int c;
     int viewmode = 0;
+    int humanreadable = 0;
     char *field;    // specific field to view
 
-    while ((c = getopt(argc, argv, "f:h")) != -1) {
+    while ((c = getopt(argc, argv, "f:Hh")) != -1) {
         switch (c) {
+            case 'H':
+                humanreadable = 1;
+                break;
             case 'h':
                 fprintf(stderr, "Usage: saucer [-v field] filename\n");
                 return 0;
@@ -42,7 +46,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    readsauce(fp, &sauce);
+    if (readsauce(fp, &sauce) > 0){
+        // no SAUCE found
+        fclose(fp);
+        return 0;
+    }
     fclose(fp);
 
     if (viewmode == 0) {
@@ -52,7 +60,7 @@ int main(int argc, char *argv[]) {
         printf("Group: %s\n", sauce.group);
     }
     else {
-        printsaucefield(&sauce, field);
+        printsaucefield(&sauce, field, humanreadable);
     }
 
     return 0;

@@ -4,6 +4,42 @@
 #include "sauce.h"
 
 
+int datatypestr(int datatype, char **str) {
+    switch (datatype) {
+        case 0:
+            *str = "None";
+            break;
+        case 1:
+            *str = "Character";
+            break;
+        case 2:
+            *str = "Bitmap";
+            break;
+        case 3:
+            *str = "Vector";
+            break;
+        case 4:
+            *str = "Audio";
+            break;
+        case 5:
+            *str = "BinaryText";
+            break;
+        case 6:
+            *str = "XBin";
+            break;
+        case 7:
+            *str = "Archive";
+            break;
+        case 8:
+            *str = "Executable";
+            break;
+        default:
+            break;
+    }
+
+    return 0;
+}
+
 int readsauce(FILE *fp, struct saucerecord *sauce) {
     unsigned char buff[4];
 
@@ -16,7 +52,6 @@ int readsauce(FILE *fp, struct saucerecord *sauce) {
     if (strcmp(sauce->id, "SAUCE") != 0) {
         // this ain't no SAUCE
         printf("No SAUCE found.\n");
-        fclose(fp);
         return 1;
     }
     // read rest of the SAUCE
@@ -60,7 +95,7 @@ int readsauce(FILE *fp, struct saucerecord *sauce) {
 }
 
 
-int printsaucefield(struct saucerecord *sauce, char *field) {
+int printsaucefield(struct saucerecord *sauce, char *field, int humanreadable) {
     if (strstr("id", field) != NULL)
         printf("%s\n", sauce->id);
     else if (strstr("version", field) != NULL)
@@ -76,7 +111,13 @@ int printsaucefield(struct saucerecord *sauce, char *field) {
     else if (strstr("filesize", field) != NULL)
         printf("%ld\n", sauce->filesize);
     else if (strstr("datatype", field) != NULL)
-        printf("%d\n", sauce->datatype);
+        if (humanreadable) {
+            char *hbuff;
+            datatypestr(sauce->datatype, &hbuff);
+            printf("%s\n", hbuff);
+        }
+        else
+            printf("%d\n", sauce->datatype);
     else if (strstr("filetype", field) != NULL)
         printf("%d\n", sauce->filetype);
     else if (strstr("tinfo1", field) != NULL)

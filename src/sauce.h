@@ -18,6 +18,13 @@ struct saucerecord {
 
 };
 
+
+#define DTYPE_BUFF_LEN  10
+
+
+int datatypestr(int datatype, char **str);
+
 int readsauce(FILE *fp, struct saucerecord *sauce);
 
-int printsaucefield(struct saucerecord *sauce, char *field);
+int printsaucefield(struct saucerecord *sauce, char *field, int humanreadable);
+
