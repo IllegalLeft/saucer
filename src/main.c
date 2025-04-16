@@ -51,6 +51,17 @@ int main(int argc, char *argv[]) {
         fclose(fp);
         return 0;
     }
+    char *comnt = malloc(sauce.comments * 64 * sizeof(char));
+    if (sauce.comments > 0) {
+        // read comment block
+        if (comnt == NULL) {
+            fprintf(stderr, "Error: Unable to allocate memory for comment block(s).");
+            fclose(fp);
+            return 1;
+        }
+        readcomnt(fp, &comnt, sauce.comments);
+        sauce.comment = comnt;
+    }
     fclose(fp);
 
     if (viewmode == 0) {
@@ -58,10 +69,13 @@ int main(int argc, char *argv[]) {
         printf("Title: %s\n", sauce.title);
         printf("Author: %s\n", sauce.author);
         printf("Group: %s\n", sauce.group);
+        printf("Comment: %s\n", comnt);
     }
     else {
         printsaucefield(&sauce, field, humanreadable);
     }
 
+    if (sauce.comments > 0)
+        free(comnt);
     return 0;
 }

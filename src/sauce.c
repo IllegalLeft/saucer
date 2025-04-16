@@ -94,23 +94,46 @@ int readsauce(FILE *fp, struct saucerecord *sauce) {
     return 0;
 }
 
+int readcomnt(FILE *fp, char **comnt, int lines) {
+    char id[6];
+    char linebuff[65];
+    linebuff[64] = '\0'; // null-terminate the buffer
+
+    fseek(fp, -5 - (64 * lines) - 128, SEEK_END);
+
+    // read ID
+    fscanf(fp, "%5c", id);
+    // is this a COMNT block?
+    if (strncmp(id, "COMNT", 5) != 0) {
+        // this isn't a COMNT block
+        fprintf(stderr, "COMNT block not found.\n");
+        //return 1;
+    }
+    for (int i = 0; i < lines; i++) {
+        // read line
+        fscanf(fp, "%64c", linebuff);
+        strcat(*comnt, linebuff);
+    }
+
+    return 0;
+}
 
 int printsaucefield(struct saucerecord *sauce, char *field, int humanreadable) {
-    if (strstr("id", field) != NULL)
+    if (strcmp("id", field) == 0)
         printf("%s\n", sauce->id);
-    else if (strstr("version", field) != NULL)
+    else if (strcmp("version", field) == 0)
         printf("%s\n", sauce->version);
-    else if (strstr("title", field) != NULL)
+    else if (strcmp("title", field) == 0)
         printf("%s\n", sauce->title);
-    else if (strstr("author", field) != NULL)
+    else if (strcmp("author", field) == 0)
         printf("%s\n", sauce->author);
-    else if (strstr("group", field) != NULL)
+    else if (strcmp("group", field) == 0)
         printf("%s\n", sauce->group);
-    else if (strstr("date", field) != NULL)
+    else if (strcmp("date", field) == 0)
         printf("%s\n", sauce->date);
-    else if (strstr("filesize", field) != NULL)
+    else if (strcmp("filesize", field) == 0)
         printf("%ld\n", sauce->filesize);
-    else if (strstr("datatype", field) != NULL)
+    else if (strcmp("datatype", field) == 0)
         if (humanreadable) {
             char *hbuff;
             datatypestr(sauce->datatype, &hbuff);
@@ -118,19 +141,21 @@ int printsaucefield(struct saucerecord *sauce, char *field, int humanreadable) {
         }
         else
             printf("%d\n", sauce->datatype);
-    else if (strstr("filetype", field) != NULL)
+    else if (strcmp("filetype", field) == 0)
         printf("%d\n", sauce->filetype);
-    else if (strstr("tinfo1", field) != NULL)
+    else if (strcmp("tinfo1", field) == 0)
         printf("%hd\n", sauce->tinfo1);
-    else if (strstr("tinfo2", field) != NULL)
+    else if (strcmp("tinfo2", field) == 0)
         printf("%hd\n", sauce->tinfo2);
-    else if (strstr("tinfo3", field) != NULL)
+    else if (strcmp("tinfo3", field) == 0)
         printf("%hd\n", sauce->tinfo3);
-    else if (strstr("comments", field) != NULL)
+    else if (strcmp("comments", field) == 0)
         printf("%d\n", sauce->comments);
-    else if (strstr("tflags", field) != NULL)
+    else if (strcmp("comment", field) == 0)
+        printf("%s\n", sauce->comment);
+    else if (strcmp("tflags", field) == 0)
         printf("%d\n", sauce->tflags);
-    else if (strstr("tinfos", field) != NULL)
+    else if (strcmp("tinfos", field) == 0)
         printf("%s\n", sauce->tinfos);
 
     return 0;

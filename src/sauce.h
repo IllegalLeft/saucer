@@ -16,6 +16,8 @@ struct saucerecord {
     unsigned char tflags;
     char tinfos[23];
 
+    char *comment;
+
 };
 
 
@@ -25,6 +27,8 @@ struct saucerecord {
 int datatypestr(int datatype, char **str);
 
 int readsauce(FILE *fp, struct saucerecord *sauce);
+
+int readcomnt(FILE *fp, char **comnt, int lines);
 
 int printsaucefield(struct saucerecord *sauce, char *field, int humanreadable);
 
